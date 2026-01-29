@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    
+    <!-- SEO Essentials -->
+    <title>Carrot Critter - Retro Arcade Harvest Game</title>
+    <meta name="description" content="Dodge falling garden rakes and pull ripe carrots in Carrot Critter, a fast-paced retro arcade game. Test your reflexes as a nimble bunny in this high-score challenge.">
+    <meta name="keywords" content="Carrot Critter, retro game, arcade game, rabbit game, browser game, pixel art, high score, carrot harvest, pirillo arcade">
+    <link rel="canonical" href="https://pirillo.com/arcade/carrot-critter.html">
+    <meta name="author" content="Chris Pirillo">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://pirillo.com/arcade/carrot-critter.html">
+    <meta property="og:title" content="Carrot Critter - Retro Arcade Harvest Game">
+    <meta property="og:description" content="Test your reflexes in this high-stakes carrot harvest! Avoid the rakes and grab the gold.">
+    <meta property="og:image" content="https://pirillo.com/arcade/images/carrot-critter.png">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@ChrisPirillo">
+    <meta name="twitter:creator" content="@ChrisPirillo">
+    <meta name="twitter:title" content="Carrot Critter - Retro Arcade Harvest Game">
+    <meta name="twitter:description" content="Dodge falling rakes and harvest carrots in this retro-style arcade game by Chris Pirillo.">
+    <meta name="twitter:image" content="https://pirillo.com/arcade/images/carrot-critter.png">
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Carrot Critter",
+      "operatingSystem": "Web Browser",
+      "applicationCategory": "GameApplication",
+      "genre": "Arcade",
+      "author": {
+        "@type": "Person",
+        "name": "Chris Pirillo",
+        "url": "https://pirillo.com"
+      },
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
+    }
+    </script>
+
+    <!-- Performance: Resource Hints -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" as="style">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" media="print" onload="this.media='all'">
+    
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-1CQ4D3VQ3L"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-1CQ4D3VQ3L');
+    </script>
+
+    <style>
+        /* Base Styling */
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            color: #d3d3d3;
+            font-family: 'Press Start 2P', system-ui, -apple-system, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+            touch-action: none;
+            font-display: swap;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            contain: layout size;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            image-rendering: pixelated;
+        }
+
+        .blur-filter {
+            filter: blur(4px) grayscale(80%);
+        }
+
+        /* CRT Scanline Effect - Optimized with will-change if needed, but keeping for aesthetic */
+        #game-container::after {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            z-index: 2;
+            background-size: 100% 4px, 6px 100%;
+            pointer-events: none;
+        }
+
+        #ui-layer {
+            position: absolute;
+            top: 25px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            z-index: 3;
+            pointer-events: none;
+            text-shadow: 2px 2px #000;
+            color: #f0f0f0;
+            font-size: 18px; /* Larger Score text */
+        }
+
+        #start-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 4;
+            text-shadow: 3px 3px 0px #000;
+            width: 90%;
+            max-width: 600px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Significantly Larger Text as requested */
+        h1 { 
+            font-size: clamp(24px, 8vw, 48px); 
+            margin-bottom: 30px; 
+            color: #e0e040; 
+            letter-spacing: 2px;
+            line-height: 1.2;
+        }
+        p { 
+            font-size: clamp(14px, 4vw, 20px); 
+            line-height: 1.6; 
+            color: #fff; 
+            margin-bottom: 15px; 
+        }
+        .blink { 
+            animation: blinker 1s linear infinite; 
+            color: #ffeb3b; 
+            margin-top: 30px; 
+            display: block; 
+            font-size: clamp(16px, 5vw, 24px); 
+        }
+
+        @keyframes blinker {
+            50% { opacity: 0; }
+        }
+        
+        #controls-hint {
+            margin-top: 40px;
+            font-size: clamp(10px, 3vw, 14px);
+            color: #aaa;
+            opacity: 0.9;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+
+    <main id="game-container" aria-label="Carrot Critter Game Screen">
+        <div id="ui-layer" role="status" aria-live="polite">
+            SCORE: <span id="score">0</span>
+        </div>
+        
+        <div id="start-message">
+            <header>
+                <h1>CARROT CRITTER</h1>
+            </header>
+            <p>AVOID FALLING RAKES</p>
+            <p>PULL CARROTS</p>
+            <span class="blink">PRESS SPACE / TAP TO START</span>
+            <div id="controls-hint">Arrows to Move/Jump<br>Down Key to Pull</div>
+        </div>
+        
+        <canvas id="gameCanvas" title="Game Canvas"></canvas>
+    </main>
+
+<script>
+/**
+ * ATARI STYLE GAME ENGINE
+ * Single file implementation
+ */
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const scoreEl = document.getElementById('score');
+const startMsg = document.getElementById('start-message');
+
+// Game Constants (Dynamic now)
+let SCREEN_W = 320;
+let SCREEN_H = 200;
+let GROUND_Y = 190; // Will be dynamically set
+const GRAVITY = 0.25; // Lowered from 0.4 for floatier jump
+const SCROLL_SPEED = 1.0; 
+const GAME_SPEED = 60; 
+
+// Colors
+const COLORS = {
+    bg: '#5C94FC',      // Sky Blue
+    ground: '#5C4033',  // Dark brown
+    grass: '#3B7A57',   // Darker green strip
+    carrot_body: '#D06010',
+    carrot_leaf: '#20A020',
+};
+
+// --- BUNNY PALETTE ---
+const BUNNY_PALETTE = {
+    '0': null, 
+    '1': '#FEFEFE',
+    '2': '#FBFCFD',
+    '3': '#8B97BA',
+    '4': '#FDFDFE',
+    '5': '#B7C2E2',
+    '6': '#121B3B',
+    '7': '#E2EAF2',
+    '8': '#A3A3AB',
+    '9': '#696C7F',
+    'a': '#FDFEFE',
+    'b': '#FDFDFD',
+    'c': '#FEFDFE',
+    'd': '#DCE3F0',
+    'e': '#E6EAF4',
+    'f': '#626C8E',
+    'g': '#6C6F80',
+    'h': '#848797',
+    'i': '#575A7D',
+    'j': '#5A5E73',
+    'k': '#FCFFFD',
+    'l': '#F8F7FB',
+    'm': '#8C98BB',
+    'n': '#666A7D',
+    'o': '#FDFFFD',
+    'p': '#ECF0F7',
+    'q': '#8C97BB',
+    'r': '#424559',
+    's': '#D3D4D9',
+    't': '#D3D4DA',
+    'u': '#707382',
+    'v': '#53546A',
+    'w': '#F2F3F4',
+    'x': '#BBC5E5',
+    'y': '#8B97BB',
+    'z': '#272641',
+    'A': '#D4D6DB',
+    'B': '#FCFEFD',
+    'C': '#FACBC9',
+    'D': '#707280',
+    'E': '#9FA0AB',
+    'F': '#474A60',
+    'G': '#F1F3F3',
+    'H': '#F1F4F9',
+    'I': '#B8C3E4',
+    'J': '#767885',
+    'K': '#F3F7F7',
+    'L': '#F8A5A5',
+    'M': '#E68F9B',
+    'N': '#545B77',
+    'O': '#464A5F',
+    'P': '#E5E8ED',
+    'Q': '#CAD4EC',
+    'R': '#8794B7',
+    'S': '#596284',
+    'T': '#1C2036',
+    'U': '#F4ABB0',
+    'V': '#EC8E99',
+    'W': '#9999A5',
+    'X': '#787888',
+    'Y': '#464961',
+    'Z': '#9BA6C0',
+};
+
+// --- RAKE PALETTE ---
+const RAKE_PALETTE = {
+    '0': null, 
+    '1': '#BDA359',
+    '2': '#9C415B',
+    '3': '#F7D674',
+    '4': '#4A3824',
+    '5': '#957148',
+    '6': '#F4B876',
+    '7': '#957248',
+    '8': '#947148',
+    '9': '#957048',
+    'a': '#94714A',
+    'b': '#F6D574',
+    'c': '#D3B764',
+    'd': '#4B3924',
+    'e': '#4B3824',
+    'f': '#9C425B',
+    'g': '#9C425C',
+    'h': '#BAA058',
+    'i': '#9D4359',
+    'j': '#BDA459',
+    'k': '#4A3924',
+    'l': '#9B415A',
+    'm': '#9C425A',
+    'n': '#9C415C',
+    'o': '#4C3824',
+    'p': '#F3B975',
+    'q': '#BFA55A',
+    'r': '#F3B777',
+    's': '#F6CB75',
+    't': '#493824',
+    'u': '#4B3923',
+    'v': '#BEA45A',
+    'w': '#9D415C',
+    'x': '#9A4258',
+    'y': '#E7AE70',
+    'z': '#715C36',
+    'A': '#C0A85A',
+    'B': '#6D5934',
+    'C': '#4A3622',
+    'D': '#4B3826',
+    'E': '#9B425D',
+    'F': '#9B435B',
+    'G': '#9C405A',
+    'H': '#985951',
+    'I': '#9B415B',
+    'J': '#9E405A',
+    'K': '#A0794E',
+    'L': '#F5CD74',
+    'M': '#E5B36E',
+    'N': '#DCAF69',
+    'O': '#4A3825',
+    'P': '#F7D574',
+    'Q': '#4B3825',
+    'R': '#9D435A',
+    'S': '#9E415A',
+    'T': '#9E425B',
+    'U': '#9A425C',
+    'V': '#9F435C',
+    'W': '#9A4C56',
+    'X': '#9D415B',
+    'Y': '#9B4D57',
+    'Z': '#9B435C',
+};
+
+// State
+let gameState = 'MENU'; 
+let score = 0;
+let frames = 0;
+let gameLoopId;
+let spawnTimer = 0;
+
+// Audio Context
+let audioCtx = null;
+
+// Entities
+let bunny = {
+    x: 40,
+    y: 0, 
+    w: 32, // New sprite size
+    h: 28,
+    vx: 0,
+    vy: 0,
+    grounded: true,
+    state: 'IDLE', 
+    pullTimer: 0
+};
+
+let entities = []; 
+let particles = [];
+
+// Input State
+const keys = {
+    ArrowUp: false,
+    ArrowDown: false,
+    ArrowLeft: false,
+    ArrowRight: false,
+    Space: false
+};
+
+// --- RESIZE LOGIC ---
+function resize() {
+    // Determine the ideal resolution based on window aspect ratio
+    // We lock the vertical resolution to 200px to maintain the retro feel
+    // and let the horizontal resolution expand/contract to fill the screen.
+    const ar = window.innerWidth / window.innerHeight;
+    
+    // Base height
+    SCREEN_H = 200; 
+    
+    // Calculate width based on AR
+    SCREEN_W = Math.floor(SCREEN_H * ar);
+    
+    // Update Canvas Resolution
+    canvas.width = SCREEN_W;
+    canvas.height = SCREEN_H;
+
+    // Recalculate Ground Position (Very low now)
+    GROUND_Y = SCREEN_H - 12; // 12px from bottom
+
+    // Update Bunny Y if grounded
+    if (bunny.grounded) {
+        bunny.y = GROUND_Y - bunny.h;
+    }
+}
+window.addEventListener('resize', resize);
+
+
+// --- AUDIO SYSTEM ---
+function initAudio() {
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+}
+
+function playSound(type) {
+    if (!audioCtx || audioCtx.state === 'suspended') {
+        if(audioCtx) audioCtx.resume();
+        return;
+    }
+
+    const osc = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+
+    osc.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+
+    const now = audioCtx.currentTime;
+
+    if (type === 'jump') {
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(150, now);
+        osc.frequency.linearRampToValueAtTime(300, now + 0.1);
+        gainNode.gain.setValueAtTime(0.1, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+        osc.start(now);
+        osc.stop(now + 0.1);
+    } 
+    else if (type === 'pull') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(600, now);
+        osc.frequency.exponentialRampToValueAtTime(1200, now + 0.05);
+        gainNode.gain.setValueAtTime(0.1, now);
+        gainNode.gain.linearRampToValueAtTime(0, now + 0.1);
+        osc.start(now);
+        osc.stop(now + 0.1);
+    }
+    else if (type === 'hit') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(100, now);
+        osc.frequency.exponentialRampToValueAtTime(10, now + 0.3);
+        gainNode.gain.setValueAtTime(0.2, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+        osc.start(now);
+        osc.stop(now + 0.3);
+    }
+    else if (type === 'step') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(100, now);
+        gainNode.gain.setValueAtTime(0.05, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+        osc.start(now);
+        osc.stop(now + 0.05);
+    }
+}
+
+// --- PIXEL ART HELPERS ---
+const SPRITES = {
+    bunny: [
+        "00000000000000000000000000000000",
+        "00000000000000000000000000000000",
+        "00000000000000000000000000000000",
+        "00000000000000000000000000000000",
+        "00000000000000000000000000000000",
+        "00000000000ghi000000000000000000",
+        "0000000000jklm000088000000000000",
+        "0000000000nopq000rstu00000000000",
+        "000000000vw1xy00zABCDE0000000000",
+        "000000000FGHI30JK2LMN00000000000",
+        "000000000OPQRS0T1UV000WX00000000",
+        "000000000YZ9nnrWUVDnWX8Ph0000000",
+        "00000000hhea1aZ2MrXR8W525D000000",
+        "00000000W211111HzZQ21bxYRJ000000",
+        "0000000Tb11111145671112360000000",
+        "0000000T241114b156711123v0000000",
+        "000000rsE511Zsr156711123v0000000",
+        "000000zMr9h1ZTz25671111phY000000",
+        "000000rMChW1cWLU5z7c21125f000000",
+        "0000000nZd7eeUU8vQ27xed55f000000",
+        "00000000XNffffffwdx5fff9fi000000",
+        "000000000vfffzWsd5NNXXX09E000000",
+        "000000009R5R6w1pRz00000000000000",
+        "00000000J6665lHZ6000000000000000",
+        "000000000000zZR60000000000000000",
+        "00000000000000000000000000000000",
+        "00000000000000000000000000000000",
+        "00000000000000000000000000000000",
+        "00000000000000000000000000000000",
+        "00000000000000000000000000000000",
+        "00000000000000000000000000000000",
+        "00000000000000000000000000000000"
+    ],
+    carrot: [
+        "00001100",
+        "00011110",
+        "00001100",
+        "00111110", // Leaves
+        "00111110", // Top
+        "00011100",
+        "00011100",
+        "00001100",
+        "00001000"  // Tip
+    ],
+    // New Rake Sprite (64x64) - CORRECTED with User Data
+    rake: [
+        "0000000000000000000000000000000000000000000000000000000000000000",
+        "0000000000000000000000000000000000000000000000000000000000000000",
+        "0000000000000000000000000000000000000000000000000000000000000000",
+        "00000000000000000000000000000000000000000000000R2fw0000000000000",
+        "00000000000000000000000000000000000000000000002g222l000000000000",
+        "0000000000000000000000000000000000000000000002g22222l00000000000",
+        "00000000000000000000000000000000000000000000Eg2222222l0000000000",
+        "00000000000000000000000000000000000000000000f2222g2222m000000000",
+        "0000000000000000000000000000000000000000000w2222Si22222m00000000",
+        "0000000000000000000000000000000000000000000n222T00i22222m0000000",
+        "000000000000000000000000000000000000000000022220000i22222l000000",
+        "0000000000000000000000000000000000000000000g222F0000i22222m00000",
+        "0000000000000000000000000000000000000000000n222fU0000i22222m0000",
+        "0000000000000000000000000000000000000000000Vg222fx0000i22222w000",
+        "00000000000000000000000000000000000000000000G2222fx0000ig222f000",
+        "000000000000000000000000000000000000000000000W2222fx000l2222X000",
+        "0000000000000000000000000000000000000000000097H2222fF0f2222gE000",
+        "00000000000000000000000000000000000000000009755H2222222222IJ0000",
+        "000000000000000000000000000000000000000000975558Y22222222IJ00000",
+        "00000000000000000000000000000000000000000975558a0Gg2222222000000",
+        "0000000000000000000000000000000000000000975558a000Znn2nn00000000",
+        "000000000000000000000000000000000000000975558a000000000000000000",
+        "00000000000000000000000000000000000000975558a0000000000000000000",
+        "0000000000000000000000000000000000000975558a00000000000000000000",
+        "000000000000000000000000000000000000975558a000000000000000000000",
+        "00000000000000000000000000000000000975558a0000000000000000000000",
+        "0000000000000000000000000000000000975558a00000000000000000000000",
+        "000000000000000000000000000000000975558a000000000000000000000000",
+        "00000000000000000000000000000000975558a0000000000000000000000000",
+        "0000000000000000000000000000000975558a00000000000000000000000000",
+        "000000000000000000000000000000975558a000000000000000000000000000",
+        "00000000000000333000000000000K75558a0000000000000000000000000000",
+        "0000000000000333333000000000ryK558a00000000000000000000000000000",
+        "000000000000cb3333330000000p66yK8a000000000000000000000000000000",
+        "00000000000q1cb33333300000p6666yK0000000000000000000000000000000",
+        "0000000000q111cb333333000p66666r00000000000000000000000000000000",
+        "000000000q11111cb3333330p66666r000000000000000000000000000000000",
+        "00000000q1111111cb33333s66666r0000000000000000000000000000000000",
+        "0000000zh11111111cb333s66666r00000000000000000000000000000000000",
+        "00000044zj11111111cb3s66666r000000000000000000000000000000000000",
+        "00000k440Aj11111111cL66666s0000000000000000000000000000000000000",
+        "0000444000zh11111111M6666s33000000000000000000000000000000000000",
+        "00044400044zj1111111N666s333300000000000000000000000000000000000",
+        "00O4k00044t0A1111111qNML3333330000000000000000000000000000000000",
+        "00dk00044t00uBh11111111cb33333300000000000000000000000000000000",
+        "00000044t00u4e8j11111111cb33333300000000000000000000000000000000",
+        "00000e4t00u4ed0hh11111111cb33333P0000000000000000000000000000000",
+        "00000d400u4ed00eBh11111111cb3333b0000000000000000000000000000000",
+        "00000000u4ed00e44Kj11111111cb33330000000000000000000000000000000",
+        "000000004ed00e4400Kh11111111cb33P0000000000000000000000000000000",
+        "00000000kD00e4400C4Bh11111111cbP00000000000000000000000000000000",
+        "00000000000e4400e44dhj11111111c000000000000000000000000000000000",
+        "0000000000D4400C44d008h111111v0000000000000000000000000000000000",
+        "00000000000d00C44d00Q4B11111v00000000000000000000000000000000000",
+        "0000000000000044d00D44oAj11v000000000000000000000000000000000000",
+        "0000000000000e4d00D44o00zhv0000000000000000000000000000000000000",
+        "0000000000000000t44o00k4z000000000000000000000000000000000000000",
+        "0000000000000000teo00k440000000000000000000000000000000000000000",
+        "00000000000000000000k4400000000000000000000000000000000000000000",
+        "000000000000000000044O000000000000000000000000000000000000000000",
+        "00000000000000000004Q0000000000000000000000000000000000000000000",
+        "0000000000000000000000000000000000000000000000000000000000000000",
+        "0000000000000000000000000000000000000000000000000000000000000000"
+    ]
+};
+
+function drawSprite(ctx, spriteMap, x, y, scale = 1, flipX = false, rotation = 0) {
+    const h = spriteMap.length;
+    const w = spriteMap[0].length;
+    
+    if (rotation !== 0) {
+        const centerX = x + (w * scale) / 2;
+        const centerY = y + (h * scale) / 2;
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate(rotation);
+        ctx.translate(-centerX, -centerY);
+    }
+
+    for(let r=0; r<h; r++) {
+        for(let c=0; c<w; c++) {
+            const char = spriteMap[r][c];
+            
+            let color = null;
+            if (spriteMap === SPRITES.bunny) {
+                color = BUNNY_PALETTE[char];
+            } 
+            else if (spriteMap === SPRITES.rake) {
+                color = RAKE_PALETTE[char];
+            }
+            else if (char !== '0') {
+                 if (spriteMap === SPRITES.carrot) {
+                    if (r < 4) color = COLORS.carrot_leaf;
+                    else color = COLORS.carrot_body;
+                }
+            }
+
+            if (color) {
+                const drawX = flipX ? x + (w - 1 - c) * scale : x + c * scale;
+                const drawY = y + r * scale;
+                ctx.fillStyle = color;
+                ctx.fillRect(drawX, drawY, scale, scale);
+            }
+        }
+    }
+
+    if (rotation !== 0) {
+        ctx.restore();
+    }
+}
+
+// --- GAME LOGIC ---
+
+function spawnEntity() {
+    // Adjusted ratio: 70% Carrots, 30% Rakes (User requested more carrots)
+    const type = Math.random() > 0.7 ? 'RAKE' : 'CARROT';
+    
+    if (type === 'CARROT') {
+        entities.push({
+            type: 'CARROT',
+            x: SCREEN_W + 20,
+            y: GROUND_Y - 6,
+            w: 8,
+            h: 9,
+            vx: -SCROLL_SPEED,
+            vy: 0,
+            collected: false
+        });
+    } else {
+        // TOSS IN RAKES
+        // FIX: Spawn strictly INSIDE the screen bounds.
+        // Screen width is variable now, use global variable
+        // We use Math.max to ensure we don't get negative range if screen is tiny
+        const safeWidth = Math.max(1, SCREEN_W - 64);
+        const spawnX = Math.random() * safeWidth;
+        
+        // Dynamic Speed
+        const speedMultiplier = 1 + (score / 1000); 
+
+        entities.push({
+            type: 'RAKE',
+            x: spawnX,
+            y: -70, // Start just above screen
+            w: 64,  // Matches new sprite size
+            h: 64,
+            vx: (Math.random() - 0.5) * 0.2, 
+            vy: (0.6 + Math.random() * 0.2) * speedMultiplier,
+            rotation: 0,
+            rotationSpeed: (Math.random() - 0.5) * 0.03 
+        });
+    }
+}
+
+function resetGame() {
+    score = 0;
+    frames = 0;
+    spawnTimer = 0;
+    entities = [];
+    particles = [];
+    bunny = {
+        x: 40,
+        y: GROUND_Y - 28, 
+        w: 32, 
+        h: 28, 
+        vx: 0,
+        vy: 0,
+        grounded: true, 
+        state: 'IDLE',
+        pullTimer: 0,
+        facingRight: true
+    };
+    scoreEl.textContent = score;
+    gameState = 'PLAYING';
+    startMsg.classList.add('hidden');
+    canvas.classList.remove('blur-filter');
+    
+    initAudio();
+}
+
+function createParticles(x, y, color, count) {
+    for(let i=0; i<count; i++) {
+        particles.push({
+            x: x,
+            y: y,
+            vx: (Math.random() - 0.5) * 4,
+            vy: (Math.random() - 1) * 4,
+            life: 30,
+            color: color
+        });
+    }
+}
+
+function update() {
+    // FIX: Update particles FIRST, regardless of game state.
+    for (let i = particles.length - 1; i >= 0; i--) {
+        let p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.2; // Gravity
+        p.life--;
+        if (p.life <= 0) particles.splice(i, 1);
+    }
+
+    if (gameState !== 'PLAYING') return;
+
+    frames++;
+
+    // --- DIFFICULTY LOGIC ---
+    spawnTimer--;
+    if (spawnTimer <= 0) {
+         spawnEntity();
+         // Calculate next interval
+         // Start: 60 frames (1 sec)
+         // Fast limit: 20 frames (0.33 sec) reached at score 1000
+         const speedUp = Math.floor(score / 25);
+         const interval = Math.max(20, 60 - speedUp);
+         spawnTimer = interval;
+    }
+
+    if (bunny.pullTimer > 0) {
+        bunny.pullTimer--;
+        bunny.state = 'PULL';
+    } else {
+        if (keys.ArrowLeft) {
+            bunny.vx = -1.5; 
+            bunny.facingRight = false;
+            bunny.state = 'WALK';
+        } else if (keys.ArrowRight) {
+            bunny.vx = 1.5;
+            bunny.facingRight = true;
+            bunny.state = 'WALK';
+        } else {
+            bunny.vx = 0;
+            bunny.state = 'IDLE';
+        }
+
+        if (keys.ArrowUp && bunny.grounded) {
+            bunny.vy = -6.5; // Slightly reduced initial velocity
+            bunny.grounded = false;
+            playSound('jump');
+            bunny.state = 'JUMP';
+        }
+
+        bunny.vy += GRAVITY;
+        bunny.x += bunny.vx;
+        bunny.y += bunny.vy;
+
+        if (bunny.y + bunny.h >= GROUND_Y) {
+            bunny.y = GROUND_Y - bunny.h;
+            bunny.vy = 0;
+            bunny.grounded = true;
+            if(bunny.vx !== 0 && frames % 10 === 0) playSound('step');
+        }
+
+        if (bunny.x < 0) bunny.x = 0;
+        if (bunny.x > SCREEN_W - bunny.w) bunny.x = SCREEN_W - bunny.w;
+    } // Closes bunny physics block
+
+    // Entity Logic
+    for (let i = entities.length - 1; i >= 0; i--) {
+        let e = entities[i];
+        
+        e.x += e.vx;
+        e.y += e.vy;
+
+        if (e.type === 'RAKE') {
+            e.rotation += e.rotationSpeed;
+            e.vy += 0.002; // Very slow gravity acceleration
+        }
+
+        if (e.x + e.w < -60 || e.y > SCREEN_H + 60) {
+            entities.splice(i, 1);
+            continue;
+        }
+
+        // IMPROVED COLLISION DETECTION
+        let hitX = e.x;
+        let hitY = e.y;
+        let hitW = e.w;
+        let hitH = e.h;
+
+        if (e.type === 'RAKE') {
+            // Trim 20px from all sides for the collision box
+            const trim = 20;
+            hitX += trim;
+            hitY += trim;
+            hitW -= trim * 2;
+            hitH -= trim * 2;
+        }
+
+        if (
+            bunny.x < hitX + hitW &&
+            bunny.x + bunny.w > hitX &&
+            bunny.y < hitY + hitH &&
+            bunny.y + bunny.h > hitY
+        ) {
+            if (e.type === 'RAKE') {
+                playSound('hit');
+                createParticles(bunny.x + 8, bunny.y + 8, '#FFF', 10);
+                gameState = 'GAMEOVER';
+                
+                entities.splice(i, 1);
+                
+                startMsg.innerHTML = `<h1>GAME OVER</h1><p>SCORE: ${score}</p><span class='blink'>PRESS SPACE</span>`;
+                startMsg.classList.remove('hidden');
+                canvas.classList.add('blur-filter'); 
+                
+            } else if (e.type === 'CARROT' && !e.collected) {
+                if (bunny.grounded) {
+                    e.collected = true;
+                    bunny.pullTimer = 10;
+                    playSound('pull');
+                    createParticles(e.x + 4, e.y, '#D06010', 5);
+                    score += 10;
+                    scoreEl.textContent = score;
+                    entities.splice(i, 1);
+                }
+            }
+        }
+    }
+}
+
+function draw() {
+    ctx.fillStyle = COLORS.bg;
+    ctx.fillRect(0, 0, SCREEN_W, SCREEN_H);
+
+    ctx.fillStyle = COLORS.grass;
+    ctx.fillRect(0, GROUND_Y, SCREEN_W, 4); 
+    ctx.fillStyle = COLORS.ground;
+    ctx.fillRect(0, GROUND_Y + 4, SCREEN_W, SCREEN_H - GROUND_Y);
+
+    entities.forEach(e => {
+        if (e.type === 'CARROT') {
+            drawSprite(ctx, SPRITES.carrot, Math.floor(e.x), Math.floor(e.y), 2); 
+        } else if (e.type === 'RAKE') {
+            drawSprite(ctx, SPRITES.rake, Math.floor(e.x), Math.floor(e.y), 1, false, e.rotation); 
+        }
+    });
+
+    let sprite = SPRITES.bunny;
+    let drawY = bunny.y;
+    drawY += 9; 
+
+    if (bunny.state === 'PULL') drawY += 2;
+    
+    drawSprite(ctx, sprite, Math.floor(bunny.x), Math.floor(drawY), 1, bunny.facingRight); 
+
+    particles.forEach(p => {
+        ctx.fillStyle = p.color;
+        ctx.fillRect(Math.floor(p.x), Math.floor(p.y), 2, 2);
+    });
+}
+
+function loop() {
+    update();
+    draw();
+    gameLoopId = requestAnimationFrame(loop);
+}
+
+// --- INPUT HANDLING ---
+
+window.addEventListener('keydown', e => {
+    if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') {
+        if (gameState === 'MENU' || gameState === 'GAMEOVER') {
+            resetGame();
+        } else {
+            keys.ArrowUp = true;
+            keys.Space = true;
+        }
+    }
+    if (e.code === 'ArrowDown' || e.code === 'KeyS') keys.ArrowDown = true;
+    if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.ArrowLeft = true;
+    if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.ArrowRight = true;
+});
+
+window.addEventListener('keyup', e => {
+    if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') {
+        keys.ArrowUp = false;
+        keys.Space = false;
+    }
+    if (e.code === 'ArrowDown' || e.code === 'KeyS') keys.ArrowDown = false;
+    if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.ArrowLeft = false;
+    if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.ArrowRight = false;
+});
+
+// Touch Controls
+canvas.addEventListener('touchstart', e => {
+    e.preventDefault();
+    initAudio(); 
+    
+    if (gameState !== 'PLAYING') {
+        resetGame();
+        return;
+    }
+
+    const touch = e.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
+    
+    const width = rect.width;
+    const height = rect.height;
+    
+    if (y < height * 0.3) {
+        keys.ArrowUp = true;
+    } else {
+        if (x < width / 2) {
+            keys.ArrowLeft = true;
+        } else {
+            keys.ArrowRight = true;
+        }
+    }
+}, {passive: false});
+
+canvas.addEventListener('touchend', e => {
+    e.preventDefault();
+    keys.ArrowUp = false;
+    keys.ArrowLeft = false;
+    keys.ArrowRight = false;
+});
+
+// Initial resize to set everything up
+resize();
+
+// Start
+ctx.fillStyle = '#000';
+ctx.fillRect(0,0,SCREEN_W, SCREEN_H);
+loop();
+
+</script>
+</body>
+</html>
